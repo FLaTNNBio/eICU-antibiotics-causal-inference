@@ -23,7 +23,7 @@ L'analisi è condotta all'interno del framework del **Target Trial Emulation** (
 
 ## 🗂️ Struttura del Repository
 
-
+```
 .
 ├── cohort/                     # Pipeline di costruzione della coorte
 │   ├── config.py               # Percorsi e costanti
@@ -53,7 +53,7 @@ L'analisi è condotta all'interno del framework del **Target Trial Emulation** (
 ├── .gitignore
 ├── LICENSE
 └── README.md
-
+```
 ---
 
 ## 📥 Download dei Dati
