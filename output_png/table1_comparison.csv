@@ -1,0 +1,20 @@
+Variabile,Demo,Completo
+N totale,"2,520","200,859"
+Età mediana [IQR],66.00 [53.00–77.00],65.00 [53.00–76.00]
+LOS ICU mediana [IQR],1.47 [0.79–2.78],1.57 [0.82–2.97]
+LOS ospedaliera mediana [IQR],4.40 [2.20–8.45],5.49 [2.90–10.04]
+Altezza media ± DS,169.74 ± 15.99,169.25 ± 13.69
+Peso medio ± DS,83.09 ± 26.61,83.93 ± 27.09
+Maschio,"1,508 (59.8%)","108,379 (54.0%)"
+Femmina,"1,008 (40.0%)","92,303 (46.0%)"
+Altro/Sconosciuto (genere),4 (0.2%),177 (0.1%)
+Caucasico,"2,010 (79.8%)","155,285 (77.3%)"
+Afroamericano,231 (9.2%),"21,308 (10.6%)"
+Ispanico,115 (4.6%),"7,464 (3.7%)"
+Asiatico,30 (1.2%),"3,270 (1.6%)"
+Nativo Americano,12 (0.5%),"1,700 (0.8%)"
+Altro/Sconosciuto (etnia),122 (4.8%),"11,832 (5.9%)"
+UTI — Vivo,"2,392 (94.9%)","189,918 (94.5%)"
+UTI — Deceduto,126 (5.0%),"10,907 (5.4%)"
+Ospedale — Vivo,"2,280 (90.5%)","181,104 (90.2%)"
+Ospedale — Deceduto,212 (8.4%),"18,004 (9.0%)"
