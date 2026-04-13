@@ -1,5 +1,11 @@
 # ⚕️ Inferenza Causale su eICU: Antibiotici Precoci e Mortalità Ospedaliera
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+## 📖 Panoramica
+
 Questo repository contiene una pipeline completa per la stima dell'**effetto causale della somministrazione precoce di antibiotici terapeutici sulla mortalità ospedaliera**, utilizzando il database **eICU Collaborative Research Database (versione DEMO)**.
 
 L'analisi è condotta all'interno del framework del **Target Trial Emulation** (Hernán & Robins, 2022), al fine di mitigare i bias tipici degli studi osservazionali su dati sanitari (confondimento da indicazione, immortal time bias).
@@ -35,15 +41,15 @@ L'analisi è condotta all'interno del framework del **Target Trial Emulation** (
 │   ├── visualization.py        # Grafici di confronto coorti
 │   └── main.py                 # Script principale per costruzione coorte
 │
-├── estimation/                 # Pipeline di stima causale
-│   ├── config.py               # Percorsi e impostazioni bootstrap
-│   ├── data_loader.py          # Caricamento dataset processato
-│   ├── propensity.py           # Modelli di propensity score (LR, XGBoost)
-│   ├── outcome_models.py       # Modelli di outcome (μ0, μ1)
-│   ├── estimators.py           # Stimatori ATE (Naive, IPW, AIPW, DR)
-│   ├── dragonnet.py            # Rete neurale DragonNet
-│   ├── bootstrap.py            # Intervalli di confidenza bootstrap
-│   └── main.py                 # Script principale per stima causale
+├── src/                        # Codice per stima causale
+│   ├── causalforge/            # Mini-framework per inferenza causale
+│   │   ├── __init__.py
+│   │   ├── model.py            # Classi base per modelli causali
+│   │   ├── models/             # Implementazioni specifiche
+│   │   │   ├── __init__.py
+│   │   │   └── dragonnet.py    # Rete neurale DragonNet
+│   │   └── utils.py            # Funzioni di supporto
+│   └── dragonnet_eicu.py       # Script principale per stima ATE
 │
 ├── notebooks/                  # Analisi esplorative (opzionale)
 ├── output_png/                 # Grafici generati
@@ -51,9 +57,11 @@ L'analisi è condotta all'interno del framework del **Target Trial Emulation** (
 │   ├── raw/                    # File CSV originali eICU (NON tracciati)
 │   └── processed/              # Dataset analitici generati
 ├── .gitignore
+├── .vscode/                    # Configurazioni Visual Studio Code
 ├── LICENSE
 └── README.md
 ```
+
 ---
 
 ## 📥 Download dei Dati
@@ -73,28 +81,9 @@ I dati raw eICU **non** sono inclusi in questo repository per limiti di dimensio
 - `admissionDx.csv`
 - `pastHistory.csv`
 - `hospital.csv`
-- `carePlanEOL.csv.gz` (opzionale)
+- `carePlanEOL.csv.gz`
 
 ---
-
-## 🛠️ Installazione e Setup
-
-### 1. Clona il repository
-```bash
-git clone https://github.com/FLaTNNBio/eICU-antibiotics-causal-inference.git
-cd eICU-antibiotics-causal-inference
-```
-
-### 2. Crea un ambiente virtuale
-```bash
-python -m venv venv
-source venv/bin/activate  # Su Windows: venv\Scripts\activate
-```
-
-### 3. Installa le dipendenze
-```bash
-pip install -r requirements.txt
-```
 
 **Dipendenze principali:**
 - `pandas`, `numpy` — Manipolazione dati
@@ -121,7 +110,7 @@ python cohort/main.py
 ### Step 2: Stima degli Effetti Causali
 
 ```bash
-python estimation/main.py
+python src/dragonnet_eicu.py
 ```
 
 **Output:**
@@ -143,31 +132,35 @@ python estimation/main.py
 
 ---
 
-## 📈 Esempio di Output
+## 📈 Risultati Principali (Seed 42)
 
-```
-============================================================
-RIEPILOGO FINALE
-============================================================
+Stima dell'Effetto Causale (ATE) degli Antibiotici Precoci sulla Mortalità Ospedaliera.
 
-  Coorte:  1980 paz.  |  A=1: 377  |  Y=1: 160
-  AUC PS (logistic): 0.723
+| Metodo | ATE (%) | IC 95% (%) | Interpretazione |
+|:-------|:-------:|:-----------|:----------------|
+| **Naive (Greggio)** | +3.54% | — | Risultato fuorviante (confondimento) |
+| **IPW** | +0.07% | [-2.85%, +4.45%] | Effetto nullo |
+| **AIPW** | +0.14% | [-3.46%, +2.96%] | Conferma effetto nullo (doubly robust) |
+| **DR Learner (XGBoost)** | +1.23% | [-0.86%, +4.47%] | Coerente con IPW/AIPW |
+| **DragonNet** | -1.86% | [-59.17%, +71.60%] | Instabile su dataset piccolo |
 
-  Metodo         ATE         CI 95%                        Sig.
-  ─────────────────────────────────────────────────────────────
-  Naive          +3.8%       —                             (non causale)
-  IPW            -1.2%       [-4.5%, +2.1%]                NON sign.
-  AIPW           -0.8%       [-3.9%, +2.3%]                NON sign.
-  DR (XGBoost)   -0.5%       [-3.2%, +2.2%]                NON sign.
-  DragonNet      -1.0%       [-4.1%, +2.1%]                NON sign.
-```
+### 🔍 Interpretazione
+
+- **Naive vs. IPW/AIPW:** Il dato grezzo (+3.54%) suggerirebbe che gli antibiotici *aumentano* la mortalità. Tuttavia, dopo correzione per il confondimento (i pazienti trattati sono intrinsecamente più gravi), l'effetto **scompare completamente** (~0%). Questo è un classico esempio di **confounding by indication**.
+
+- **IPW e AIPW concordano:** Entrambi gli stimatori robusti indicano un effetto **nullo** (gli intervalli di confidenza includono lo 0). L'AIPW, essendo *doubly robust*, fornisce una conferma della solidità del risultato.
+
+- **DragonNet:** Su un dataset di soli 1,980 pazienti, la rete neurale profonda risulta **sovradimensionata** e instabile, producendo un intervallo di confidenza eccessivamente ampio. Questo evidenzia i limiti del deep learning su campioni di piccole dimensioni.
+
+- **DR Learner (XGBoost):** Offre un buon compromesso tra flessibilità e stabilità, con un intervallo di confidenza più stretto e coerente con i metodi classici.
 
 ---
 
 ## ⚠️ Limiti dello Studio
 
 - **Confondimento Residuo:** L'esclusione di vitali e lab dal baseline, sebbene necessaria per prevenire il data leakage, potrebbe non catturare completamente la gravità acuta del paziente.
-- **Dimensione Campionaria:** Il dataset DEMO limita la potenza statistica e le analisi di sottogruppo.
+- **Dimensione Campionaria:** Il dataset DEMO (n=1,980) limita la potenza statistica e la possibilità di condurre analisi di sottogruppo. Modelli complessi come DragonNet soffrono di instabilità.
+- **Generalizzabilità:** I risultati si riferiscono al dataset DEMO e potrebbero non essere rappresentativi dell'intero database eICU.
 
 ---
 
